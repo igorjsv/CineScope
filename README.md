@@ -1,0 +1,2 @@
+# CineScope
+Catalogo de filmes 
