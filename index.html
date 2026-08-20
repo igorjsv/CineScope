@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineScope | Filmes & Séries</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo">
+            <h2>Cine<span>Scope</span></h2>
+        </div>
+        <form id="search-form" class="search-box">
+            <input type="search" id="search-input" placeholder="Buscar filmes...">
+            <button type="submit">Buscar</button>
+        </form>
+    </header>
+
+    <section class="hero-section">
+        <div class="hero-media">
+            <img src="" alt="Hero Image">
+            <div class="hero-overlay"></div>
+        </div>
+
+        <div class="hero-content">
+            <div class="hero-meta">
+                <span class="genero"></span>
+                <span class="avaliacao"></span>
+                <span class="ano"></span>
+            </div>
+
+            <h1 class="titulo"></h1>
+            <p class="hero-overview"></p>
+
+            <div class="hero-actions">
+                <button class="btn-primary">Ver detalhes</button>
+                <button class="btn-secondary">Adicionar à lista</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Catálogo com Filtros Auto-Ajustáveis (Quebra fluida para baixo) -->
+    <section class="catalog-section">
+        <div class="catalog-container">
+            
+            <h2 class="catalog-title">Explorar Filmes</h2>
+            
+            <div class="genre-filter-container">
+                <button class="genre-btn active" data-genre="">Todos</button>
+                <button class="genre-btn" id="btn-show-favorites" data-genre="favoritos">⭐ Minha Lista</button>
+                <button class="genre-btn" data-genre="28">Ação</button>
+                <button class="genre-btn" data-genre="35">Comédia</button>
+                <button class="genre-btn" data-genre="27">Terror</button>
+                <button class="genre-btn" data-genre="878">Ficção Científica</button>
+                <button class="genre-btn" data-genre="16">Animação</button>
+                <button class="genre-btn" data-genre="10749">Romance</button>
+                <button class="genre-btn" data-genre="53">Suspense</button>
+                <button class="genre-btn" data-genre="18">Drama</button>
+                <button class="genre-btn" data-genre="14">Fantasia</button>
+
+                <select id="sort-select" class="custom-select">
+                    <option value="popularity.desc">🔥 Mais Populares</option>
+                    <option value="vote_average.desc">⭐ Melhores Avaliados</option>
+                    <option value="primary_release_date.desc">🎬 Lançamentos</option>
+                </select>
+            </div>
+
+            <div class="movie-grid"></div>
+            
+            <div class="load-more-container">
+                <button id="btn-load-more" class="btn-load-more">Carregar mais</button>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Modal de Detalhes -->
+    <div id="movie-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button id="btn-close-modal" class="btn-close">&times;</button>
+            <div class="modal-body">
+                <div class="modal-media" id="modal-media-container"></div>
+                <div class="modal-info">
+                    <h2 id="modal-title">Título do Filme</h2>
+                    <div class="modal-metadata">
+                        <span id="modal-rating">⭐ 0.0</span>
+                        <span id="modal-year">2024</span>
+                        <span id="modal-runtime">0 min</span>
+                    </div>
+                    <div id="modal-genres" class="modal-genres"></div>
+                    <button type="button" id="btn-modal-favorite" class="btn-modal-fav">+ Adicionar à lista</button>
+                    <p id="modal-overview">Sinopse detalhada do filme...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/lenis@1.1.20/dist/lenis.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
