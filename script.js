@@ -239,7 +239,7 @@ async function carregarMinhaLista() {
   btnLoadMore.style.display = 'none';
 
   if (favoritos.length === 0) {
-    movieGrid.innerHTML = '<p style="color: #fff; font-size: 18px; grid-column: 1 / -1; text-align: center;">Sua lista está vazia! Adicione filmes clicando no botão da Hero ou no modal do filme. ⭐</p>';
+    movieGrid.innerHTML = '<p style="color: #fff; font-size: 18px; grid-column: 1 / -1; text-align: center;">Sua lista está vazia! ⭐</p>';
     return;
   }
 
