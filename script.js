@@ -4,6 +4,14 @@ const BASE_URL = 'https://api.themoviedb.org/3';
 const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 const BACKDROP_BASE_URL = 'https://image.tmdb.org/t/p/original';
 
+// === CONFIGURAÇÃO DO SUPABASE ===
+const SUPABASE_URL = 'https://gdqbxujrhntjimxshvno.supabase.co';       // Cole sua URL (ex: https://xyzcompany.supabase.co)
+const SUPABASE_ANON_KEY = 'sb_publishable_Gg6tgUxQpT_41BNAP8XThw_SOno0Bd5';   // Cole sua chave anon public
+
+// Inicializa o cliente do Supabase
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ============================================
+
 const GENEROS_MAP = {
   28: 'Ação', 12: 'Aventura', 16: 'Animação', 35: 'Comédia',
   80: 'Crime', 99: 'Documentário', 18: 'Drama', 10751: 'Família',
@@ -118,6 +126,67 @@ function atualizarBotaoFavorito(btn, filmeId) {
     btn.textContent = '+ Adicionar à lista';
     btn.style.backgroundColor = '#3B0201';
   }
+}
+
+// --- 4.1. FUNÇÕES DO SUPABASE (BANCO DE DADOS DE COMENTÁRIOS) ---
+async function adicionarComentario(filmeId, nomeUsuario, textoComentario) {
+  const { data, error } = await supabaseClient
+    .from('comentarios')
+    .insert([
+      { filme_id: Number(filmeId), usuario: nomeUsuario, texto: textoComentario }
+    ]);
+
+  if (error) {
+    console.error('Erro ao salvar comentário:', error.message);
+    alert('Erro ao enviar comentário.');
+  } else {
+    console.log('Comentário salvo com sucesso!', data);
+  }
+}
+
+async function carregarComentariosDoFilme(filmeId) {
+  const { data, error } = await supabaseClient
+    .from('comentarios')
+    .select('*')
+    .eq('filme_id', Number(filmeId))
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Erro ao buscar comentários:', error.message);
+    return [];
+  }
+
+  return data;
+}
+
+async function exibirComentariosModal(filmeId) {
+  const commentsList = document.querySelector('#comments-list');
+  if (!commentsList) return;
+
+  commentsList.innerHTML = '<p class="no-comments">Carregando comentários...</p>';
+
+  const comentarios = await carregarComentariosDoFilme(filmeId);
+
+  if (comentarios.length === 0) {
+    commentsList.innerHTML = '<p class="no-comments">Seja o primeiro a comentar este filme!</p>';
+    return;
+  }
+
+  commentsList.innerHTML = '';
+  comentarios.forEach(c => {
+    const dataFormatada = new Date(c.created_at).toLocaleDateString('pt-BR');
+    
+    const div = document.createElement('div');
+    div.classList.add('comment-item');
+    div.innerHTML = `
+      <div class="comment-header">
+        <span class="comment-author">${c.usuario}</span>
+        <span class="comment-date">${dataFormatada}</span>
+      </div>
+      <p class="comment-body">${c.texto}</p>
+    `;
+    commentsList.appendChild(div);
+  });
 }
 
 // --- 5. FUNÇÕES DE RENDERIZAÇÃO E SKELETON ---
@@ -303,6 +372,9 @@ async function abrirModalFilme(filmeId) {
 
   atualizarBotaoFavorito(btnModalFavorite, currentModalMovieId);
   modal.classList.remove('hidden');
+
+  // Carrega os comentários do filme via Supabase ao abrir o modal
+  exibirComentariosModal(filmeId);
 }
 
 function fecharModal() {
@@ -312,6 +384,25 @@ function fecharModal() {
 }
 
 // --- 8. EVENT LISTENERS ---
+
+// Formulário de comentários
+const commentForm = document.querySelector('#comment-form');
+if (commentForm) {
+  commentForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const nomeInput = document.querySelector('#comment-username');
+    const textoInput = document.querySelector('#comment-text');
+
+    const nome = nomeInput.value.trim();
+    const texto = textoInput.value.trim();
+
+    if (currentModalMovieId && nome && texto) {
+      await adicionarComentario(currentModalMovieId, nome, texto);
+      textoInput.value = ''; // Limpa o campo do comentário
+      exibirComentariosModal(currentModalMovieId); // Recarrega comentários
+    }
+  });
+}
 
 // Busca
 searchForm.addEventListener('submit', (e) => {

@@ -40,7 +40,7 @@
         </div>
     </section>
 
-    <!-- Catálogo com Filtros Auto-Ajustáveis (Quebra fluida para baixo) -->
+    <!-- Catálogo com Filtros Auto-Ajustáveis -->
     <section class="catalog-section">
         <div class="catalog-container">
             
@@ -91,12 +91,31 @@
                     <div id="modal-genres" class="modal-genres"></div>
                     <button type="button" id="btn-modal-favorite" class="btn-modal-fav">+ Adicionar à lista</button>
                     <p id="modal-overview">Sinopse detalhada do filme...</p>
+
+                    <!-- SEÇÃO DE COMENTÁRIOS (SUPABASE) -->
+                    <hr class="modal-divider">
+                    <div class="comments-section">
+                        <h3>Comentários</h3>
+                        <form id="comment-form" class="comment-form">
+                            <input type="text" id="comment-username" placeholder="Seu nome" required>
+                            <textarea id="comment-text" placeholder="Escreva o seu comentário sobre o filme..." rows="3" required></textarea>
+                            <button type="submit" class="btn-primary">Enviar Comentário</button>
+                        </form>
+
+                        <div id="comments-list" class="comments-list">
+                            <p class="no-comments">Carregando comentários...</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- SDK do Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Smooth Scroll Lenis -->
     <script src="https://unpkg.com/lenis@1.1.20/dist/lenis.min.js"></script>
+    <!-- Script Principal -->
     <script src="script.js"></script>
 </body>
 </html>
