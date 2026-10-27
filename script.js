@@ -524,3 +524,129 @@ window.addEventListener('keydown', (e) => {
 // --- 9. INICIALIZAÇÃO ---
 fetchHeroMovie();
 aplicarFiltros(paginaAtual);
+
+// --- 4.2. FUNÇÕES DE AUTENTICAÇÃO (SUPABASE) ---
+const authModal = document.querySelector('#auth-modal');
+const btnOpenAuth = document.querySelector('#btn-open-auth');
+const btnCloseAuth = document.querySelector('#btn-close-auth');
+const userLoggedInfo = document.querySelector('#user-logged-info');
+const userDisplayName = document.querySelector('#user-display-name');
+const btnLogout = document.querySelector('#btn-logout');
+
+const authTabBtns = document.querySelectorAll('.auth-tab-btn');
+const loginForm = document.querySelector('#login-form');
+const registerForm = document.querySelector('#register-form');
+
+let usuarioAtual = null;
+
+// Alternar abas do modal (Login / Cadastro)
+authTabBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    authTabBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const targetId = btn.dataset.target;
+    if (targetId === 'login-form') {
+      loginForm.classList.remove('hidden');
+      registerForm.classList.add('hidden');
+    } else {
+      registerForm.classList.remove('hidden');
+      loginForm.classList.add('hidden');
+    }
+  });
+});
+
+// Abrir e fechar modal de Auth
+if (btnOpenAuth) {
+  btnOpenAuth.addEventListener('click', () => authModal.classList.remove('hidden'));
+}
+if (btnCloseAuth) {
+  btnCloseAuth.addEventListener('click', () => authModal.classList.add('hidden'));
+}
+
+// Cadastrar usuário
+registerForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const nome = document.querySelector('#register-name').value.trim();
+  const email = document.querySelector('#register-email').value.trim();
+  const senha = document.querySelector('#register-password').value.trim();
+
+  const { data, error } = await supabaseClient.auth.signUp({
+    email: email,
+    password: senha,
+    options: {
+      data: { nome_completo: nome }
+    }
+  });
+
+  if (error) {
+    alert('Erro no cadastro: ' + error.message);
+  } else {
+    alert('Cadastro realizado com sucesso! Verifique seu e-mail se necessário ou faça login.');
+    authModal.classList.add('hidden');
+  }
+});
+
+// Logar usuário
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.querySelector('#login-email').value.trim();
+  const senha = document.querySelector('#login-password').value.trim();
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email: email,
+    password: senha
+  });
+
+  if (error) {
+    alert('Erro ao entrar: ' + error.message);
+  } else {
+    alert('Login efetuado com sucesso!');
+    authModal.classList.add('hidden');
+    verificarSessao();
+  }
+});
+
+// Logout
+if (btnLogout) {
+  btnLogout.addEventListener('click', async () => {
+    await supabaseClient.auth.signOut();
+    usuarioAtual = null;
+    atualizarInterfaceUsuario(null);
+    alert('Você saiu da sua conta.');
+  });
+}
+
+// Verificar sessão ativa ao carregar a página
+async function verificarSessao() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session) {
+    usuarioAtual = session.user;
+    
+    // Busca o nome salvo na tabela perfis
+    const { data: perfil } = await supabaseClient
+      .from('perfis')
+      .select('nome_completo')
+      .eq('id', usuarioAtual.id)
+      .single();
+
+    const nomeExibicao = perfil?.nome_completo || usuarioAtual.email;
+    atualizarInterfaceUsuario(nomeExibicao);
+  } else {
+    atualizarInterfaceUsuario(null);
+  }
+}
+
+function atualizarInterfaceUsuario(nome) {
+  if (nome) {
+    btnOpenAuth.classList.add('hidden');
+    userLoggedInfo.classList.remove('hidden');
+    userDisplayName.textContent = `Olá, ${nome}`;
+  } else {
+    btnOpenAuth.classList.remove('hidden');
+    userLoggedInfo.classList.add('hidden');
+  }
+}
+
+// Chame a verificação de sessão na inicialização do script:
+verificarSessao();

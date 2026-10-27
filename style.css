@@ -692,3 +692,114 @@ font-size: 18px;
 width: 75px;
 }
 }
+
+/* =========================================================
+10. AUTENTICAÇÃO E PERFIL
+========================================================= */
+.user-menu-container {
+  margin-left: auto;
+}
+
+.btn-auth-open {
+  background: #BA0502;
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.btn-auth-open:hover {
+  background: #e50914;
+}
+
+.user-logged-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.user-logged-info.hidden {
+  display: none;
+}
+
+#user-display-name {
+  color: #ffd700;
+  font-weight: 600;
+}
+
+.btn-logout {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ccc;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.btn-logout:hover {
+  background: #BA0502;
+  color: #fff;
+  border-color: #BA0502;
+}
+
+.auth-modal-content {
+  max-width: 450px !important;
+  padding: 30px;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 10px;
+}
+
+.auth-tab-btn {
+  background: transparent;
+  color: #888;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 6px 12px;
+  transition: color 0.2s;
+}
+
+.auth-tab-btn.active {
+  color: #BA0502;
+  border-bottom: 2px solid #BA0502;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.auth-form.hidden {
+  display: none;
+}
+
+.auth-form h3 {
+  font-size: 20px;
+  margin-bottom: 5px;
+}
+
+.auth-form input {
+  background-color: #0f1016;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.auth-form input:focus {
+  border-color: #BA0502;
+}
+

@@ -15,6 +15,16 @@
             <input type="search" id="search-input" placeholder="Buscar filmes...">
             <button type="submit">Buscar</button>
         </form>
+
+        <!-- Modal de Autenticação / Perfil -->
+        <div class="user-menu-container">
+    <button id="btn-open-auth" class="btn-auth-open">Entrar / Cadastrar</button>
+    <div id="user-logged-info" class="user-logged-info hidden">
+        <span id="user-display-name">Meu Perfil</span>
+        <button id="btn-logout" class="btn-logout">Sair</button>
+    </div>
+</div>
+
     </header>
 
     <section class="hero-section">
@@ -110,6 +120,40 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal de Autenticação / Perfil -->
+<div id="auth-modal" class="modal-overlay hidden">
+    <div class="modal-content auth-modal-content">
+        <button id="btn-close-auth" class="btn-close">&times;</button>
+        <div class="auth-container">
+            
+            <!-- Abas Alternnativas (Login / Cadastro) -->
+            <div class="auth-tabs">
+                <button class="auth-tab-btn active" data-target="login-form">Entrar</button>
+                <button class="auth-tab-btn" data-target="register-form">Cadastrar</button>
+            </div>
+
+            <!-- Formulário de Login -->
+            <form id="login-form" class="auth-form">
+                <h3>Bem-vindo de volta!</h3>
+                <input type="email" id="login-email" placeholder="E-mail" required>
+                <input type="password" id="login-password" placeholder="Senha" required>
+                <button type="submit" class="btn-primary">Entrar</button>
+            </form>
+
+            <!-- Formulário de Cadastro -->
+            <form id="register-form" class="auth-form hidden">
+                <h3>Crie sua conta</h3>
+                <input type="text" id="register-name" placeholder="Nome Completo" required>
+                <input type="email" id="register-email" placeholder="E-mail" required>
+                <input type="password" id="register-password" placeholder="Senha (mín. 6 dígitos)" required>
+                <button type="submit" class="btn-primary">Cadastrar</button>
+            </form>
+
+        </div>
+    </div>
+</div>
+
 
     <!-- SDK do Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
