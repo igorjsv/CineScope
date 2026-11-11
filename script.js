@@ -90,42 +90,50 @@ function raf(time) {
 }
 requestAnimationFrame(raf);
 
-// --- 4. FUNÇÕES DE LOCALSTORAGE (FAVORITOS) ---
-function getFavoritos() {
-  const salvos = localStorage.getItem('cinescope_favoritos');
-  return salvos ? JSON.parse(salvos) : [];
-}
-
-function alternarFavorito(filmeId) {
-  let favoritos = getFavoritos();
-  const idNumero = Number(filmeId);
-
-  if (favoritos.includes(idNumero)) {
-    favoritos = favoritos.filter(id => id !== idNumero);
-  } else {
-    favoritos.push(idNumero);
+// --- 4. FAVORITOS PERSISTIDOS NO SUPABASE ---
+async function getFavoritos() {
+  if (!usuarioAtual) return [];
+  const { data, error } = await supabaseClient
+    .from('favoritos')
+    .select('filme_id')
+    .eq('usuario_id', usuarioAtual.id);
+  if (error) {
+    console.error('Erro ao carregar favoritos:', error.message);
+    return [];
   }
-
-  localStorage.setItem('cinescope_favoritos', JSON.stringify(favoritos));
-  return favoritos.includes(idNumero);
+  return (data || []).map(item => Number(item.filme_id));
 }
 
-function atualizarBotaoFavorito(btn, filmeId) {
-  if (!btn) return;
-  const favoritos = getFavoritos();
-  const isFavorito = favoritos.includes(Number(filmeId));
+async function alternarFavorito(filmeId) {
+  if (!usuarioAtual) {
+    alert('Entre na sua conta para salvar filmes na sua lista.');
+    authModal?.classList.remove('hidden');
+    return false;
+  }
+  const idNumero = Number(filmeId);
+  const favoritos = await getFavoritos();
+  if (favoritos.includes(idNumero)) {
+    const { error } = await supabaseClient.from('favoritos')
+      .delete().eq('usuario_id', usuarioAtual.id).eq('filme_id', idNumero);
+    if (error) { console.error(error); alert('Não foi possível remover o favorito.'); return true; }
+    return false;
+  }
+  const { error } = await supabaseClient.from('favoritos').insert({
+    usuario_id: usuarioAtual.id, filme_id: idNumero
+  });
+  if (error) { console.error(error); alert('Não foi possível salvar o favorito.'); return false; }
+  return true;
+}
 
+async function atualizarBotaoFavorito(btn, filmeId) {
+  if (!btn) return;
+  const favoritos = await getFavoritos();
+  const isFavorito = favoritos.includes(Number(filmeId));
   btn.classList.remove('fav-pop');
   void btn.offsetWidth;
   btn.classList.add('fav-pop');
-
-  if (isFavorito) {
-    btn.textContent = '✓ Na Minha Lista';
-    btn.style.backgroundColor = '#107c41';
-  } else {
-    btn.textContent = '+ Adicionar à lista';
-    btn.style.backgroundColor = '#3B0201';
-  }
+  btn.textContent = isFavorito ? '✓ Na Minha Lista' : '+ Adicionar à lista';
+  btn.style.backgroundColor = isFavorito ? '#107c41' : '#3B0201';
 }
 
 // --- 4.1. FUNÇÕES DO SUPABASE (BANCO DE DADOS DE COMENTÁRIOS) ---
@@ -180,11 +188,13 @@ async function exibirComentariosModal(filmeId) {
     div.classList.add('comment-item');
     div.innerHTML = `
       <div class="comment-header">
-        <span class="comment-author">${c.usuario}</span>
+        <span class="comment-author"></span>
         <span class="comment-date">${dataFormatada}</span>
       </div>
-      <p class="comment-body">${c.texto}</p>
+      <p class="comment-body"></p>
     `;
+    div.querySelector('.comment-author').textContent = c.usuario || 'Usuário';
+    div.querySelector('.comment-body').textContent = c.texto || c.texto_comentario || '';
     commentsList.appendChild(div);
   });
 }
@@ -304,20 +314,21 @@ async function searchMovies(query, page = 1) {
 }
 
 async function carregarMinhaLista() {
-  const favoritos = getFavoritos();
   btnLoadMore.style.display = 'none';
-
-  if (favoritos.length === 0) {
-    movieGrid.innerHTML = '<p style="color: #fff; font-size: 18px; grid-column: 1 / -1; text-align: center;">Sua lista está vazia! ⭐</p>';
+  if (!usuarioAtual) {
+    movieGrid.innerHTML = '<p style="color:#fff;text-align:center;grid-column:1/-1">Entre na sua conta para visualizar sua lista.</p>';
+    authModal?.classList.remove('hidden');
     return;
   }
-
+  const favoritos = await getFavoritos();
+  if (favoritos.length === 0) {
+    movieGrid.innerHTML = '<p style="color:#fff;font-size:18px;grid-column:1/-1;text-align:center">Sua lista está vazia! ⭐</p>';
+    return;
+  }
   renderizarSkeletons(favoritos.length);
-
   const promessas = favoritos.map(id =>
     fetch(`${BASE_URL}/movie/${id}?api_key=${API_KEY}&language=pt-BR`).then(res => res.json())
   );
-
   const filmesDetalhados = await Promise.all(promessas);
   renderizarFilmes(filmesDetalhados, true);
   lenis.scrollTo('.catalog-section', { offset: -50, duration: 1.2 });
@@ -440,32 +451,21 @@ btnHeroDetails.addEventListener('click', () => {
 });
 
 // Botão "Adicionar à lista" da Hero
-btnHeroFavorite.addEventListener('click', () => {
-  if (heroMovieId) {
-    alternarFavorito(heroMovieId);
-    atualizarBotaoFavorito(btnHeroFavorite, heroMovieId);
-
-    if (generoAtual === 'favoritos') {
-      carregarMinhaLista();
-    }
-  }
+btnHeroFavorite.addEventListener('click', async () => {
+  if (!heroMovieId) return;
+  await alternarFavorito(heroMovieId);
+  await atualizarBotaoFavorito(btnHeroFavorite, heroMovieId);
+  if (generoAtual === 'favoritos') await carregarMinhaLista();
 });
 
 // Botão "Adicionar à lista" do Modal
 if (btnModalFavorite) {
-  btnModalFavorite.addEventListener('click', () => {
-    if (currentModalMovieId) {
-      alternarFavorito(currentModalMovieId);
-      atualizarBotaoFavorito(btnModalFavorite, currentModalMovieId);
-
-      if (heroMovieId === Number(currentModalMovieId)) {
-        atualizarBotaoFavorito(btnHeroFavorite, heroMovieId);
-      }
-
-      if (generoAtual === 'favoritos') {
-        carregarMinhaLista();
-      }
-    }
+  btnModalFavorite.addEventListener('click', async () => {
+    if (!currentModalMovieId) return;
+    await alternarFavorito(currentModalMovieId);
+    await atualizarBotaoFavorito(btnModalFavorite, currentModalMovieId);
+    if (heroMovieId === Number(currentModalMovieId)) await atualizarBotaoFavorito(btnHeroFavorite, heroMovieId);
+    if (generoAtual === 'favoritos') await carregarMinhaLista();
   });
 }
 
@@ -532,6 +532,8 @@ const btnCloseAuth = document.querySelector('#btn-close-auth');
 const userLoggedInfo = document.querySelector('#user-logged-info');
 const userDisplayName = document.querySelector('#user-display-name');
 const btnLogout = document.querySelector('#btn-logout');
+const avatarInput = document.querySelector('#avatar-input');
+const userAvatar = document.querySelector('#user-avatar');
 
 const authTabBtns = document.querySelectorAll('.auth-tab-btn');
 const loginForm = document.querySelector('#login-form');
@@ -626,27 +628,57 @@ async function verificarSessao() {
     // Busca o nome salvo na tabela perfis
     const { data: perfil } = await supabaseClient
       .from('perfis')
-      .select('nome_completo')
+      .select('nome_completo, avatar_url')
       .eq('id', usuarioAtual.id)
-      .single();
+      .maybeSingle();
 
-    const nomeExibicao = perfil?.nome_completo || usuarioAtual.email;
-    atualizarInterfaceUsuario(nomeExibicao);
+    const nomeExibicao = perfil?.nome_completo || usuarioAtual.user_metadata?.nome_completo || usuarioAtual.email;
+    atualizarInterfaceUsuario(nomeExibicao, perfil?.avatar_url || null);
   } else {
     atualizarInterfaceUsuario(null);
   }
 }
 
-function atualizarInterfaceUsuario(nome) {
+function atualizarInterfaceUsuario(nome, avatarUrl = null) {
   if (nome) {
     btnOpenAuth.classList.add('hidden');
     userLoggedInfo.classList.remove('hidden');
     userDisplayName.textContent = `Olá, ${nome}`;
+    if (userAvatar) {
+      if (avatarUrl) { userAvatar.src = avatarUrl; userAvatar.classList.remove('hidden'); }
+      else { userAvatar.removeAttribute('src'); userAvatar.classList.add('hidden'); }
+    }
   } else {
     btnOpenAuth.classList.remove('hidden');
     userLoggedInfo.classList.add('hidden');
+    if (userAvatar) userAvatar.classList.add('hidden');
   }
 }
 
-// Chame a verificação de sessão na inicialização do script:
+// Upload da foto para o Supabase Storage e atualização do perfil.
+if (avatarInput) {
+  avatarInput.addEventListener('change', async () => {
+    const arquivo = avatarInput.files?.[0];
+    if (!arquivo || !usuarioAtual) return;
+    if (!arquivo.type.startsWith('image/')) { alert('Selecione um arquivo de imagem.'); return; }
+    if (arquivo.size > 2 * 1024 * 1024) { alert('A imagem deve ter no máximo 2 MB.'); return; }
+    const extensao = arquivo.name.split('.').pop().toLowerCase();
+    const caminho = `${usuarioAtual.id}/avatar-${Date.now()}.${extensao}`;
+    const { error: uploadError } = await supabaseClient.storage.from('avatars').upload(caminho, arquivo, { upsert: true, contentType: arquivo.type });
+    if (uploadError) { console.error(uploadError); alert('Não foi possível enviar a foto. Confira a configuração do Storage.'); return; }
+    const { data: urlData } = supabaseClient.storage.from('avatars').getPublicUrl(caminho);
+    const avatarUrl = urlData.publicUrl;
+    const { error: profileError } = await supabaseClient.from('perfis').upsert({ id: usuarioAtual.id, avatar_url: avatarUrl });
+    if (profileError) { console.error(profileError); alert('Foto enviada, mas não foi possível atualizar o perfil.'); return; }
+    if (userAvatar) { userAvatar.src = avatarUrl; userAvatar.classList.remove('hidden'); }
+    alert('Foto de perfil atualizada!');
+    avatarInput.value = '';
+  });
+}
+
+// Mantém a interface sincronizada quando a sessão muda.
+supabaseClient.auth.onAuthStateChange((_event, session) => {
+  usuarioAtual = session?.user || null;
+  setTimeout(() => { verificarSessao(); }, 0);
+});
 verificarSessao();

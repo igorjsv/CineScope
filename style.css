@@ -840,3 +840,17 @@ font-size: 12px;
   border-color: #BA0502;
 }
 
+
+
+/* Avatar do usuário */
+.user-avatar {
+  width: 34px; height: 34px; border-radius: 50%; object-fit: cover;
+  border: 2px solid #BA0502;
+}
+.user-avatar.hidden { display: none; }
+
+.avatar-upload-label {
+  color: #ddd; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+  padding: 5px 9px; border-radius: 6px; font-size: 11px; cursor: pointer;
+}
+.avatar-upload-label:hover { background: #BA0502; color: #fff; }
